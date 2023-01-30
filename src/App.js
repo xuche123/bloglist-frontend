@@ -16,9 +16,10 @@ const App = () => {
 
 
   useEffect(() => {
-    blogService.getAll().then(blogs =>
-      setBlogs(blogs)
-    )
+    blogService.getAll().then(blogs => {
+      const newBlogs = sortBlogs(blogs)
+      setBlogs(newBlogs)
+    })
   }, [])
 
   useEffect(() => {
@@ -29,6 +30,12 @@ const App = () => {
       blogService.setToken(user.token)
     }
   }, [])
+
+  const sortBlogs = (blogs) => {
+    const newBlogs = [...blogs]
+    newBlogs.sort((a, b) => (a.likes < b.likes) ? 1 : ((b.likes < a.likes) ? -1 : 0))
+    return newBlogs
+  }
 
   const handleLogin = async (event) => {
     event.preventDefault()
@@ -58,7 +65,8 @@ const App = () => {
     blogService
       .create(newBlog)
       .then(returnedBlog => {
-        setBlogs(blogs.concat(returnedBlog))
+        const newBlogs = sortBlogs(blogs.concat(returnedBlog))
+        setBlogs(newBlogs)
         setMessage(`success ${returnedBlog.title} by ${returnedBlog.author} is added successfully`)
         setTimeout(() => {
           setMessage(null)
@@ -76,7 +84,7 @@ const App = () => {
     blogService
       .like(blog)
       .then(returnedBlog => {
-        const newBlogs = blogs.map(blog => blog.id === returnedBlog.id ? returnedBlog : blog)
+        const newBlogs = sortBlogs(blogs.map(blog => blog.id === returnedBlog.id ? returnedBlog : blog))
         setBlogs(newBlogs)
         setMessage(`success Liked ${returnedBlog.title} by ${returnedBlog.author}`)
         setTimeout(() => {
@@ -98,6 +106,7 @@ const App = () => {
         .remove(blog)
         .then(() => {
           const newBlogs = blogs.filter((obj) => obj.id !== blog.id)
+          sortBlogs(newBlogs)
           setBlogs(newBlogs)
         }).catch(
           err => {
